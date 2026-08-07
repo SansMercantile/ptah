@@ -1,0 +1,6 @@
+{
+  "name": "PTAH",
+  "description": "AI-driven construction and infrastructure intelligence for safe, efficient, and sustainable building operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
