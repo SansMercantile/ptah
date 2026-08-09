@@ -1,142 +1,73 @@
-# PTAH Frontend - Infrastructure Planning & Construction System
+# PTAH Frontend — Infrastructure Planning & Construction Intelligence
 
-## Overview
+PTAH is Sans Mercantile's AI-driven construction and infrastructure intelligence
+system: project control, safety/compliance auditing, materials budget
+optimization, and a live view into its four operational subsystems (HAPI
+logistics, HATHOR mining/supply, MAMI_WATA hydraulics, RA clean power).
 
-PTAH is the Infrastructure Planning & Construction system. This frontend provides a unified interface for managing building projects, resource allocation, safety compliance, and construction timelines.
+## Stack
 
-## Features
+Single Node/Express server (`server.ts`) that runs Vite in middleware mode for
+dev and serves the static build in production — one process, one port, no
+separate frontend/backend split.
 
-- **Project Management**: Track active construction projects and initiatives
-- **Resource Allocation**: Optimize labor, equipment, and material resources
-- **Safety Compliance**: Monitor workplace safety and compliance metrics
-- **Schedule Management**: Plan and track project timelines and milestones
-- **Performance Analytics**: View detailed metrics and performance insights
-- **Real-time Health Checks**: Monitor backend API availability
+- React 19 + TypeScript, Vite 6, Tailwind CSS 4
+- `motion` (Framer Motion) for page transitions
+- `lucide-react` icons
+- Google Gemini (`@google/genai`, model `gemini-3.5-flash`) for the AI features
 
 ## Local Development
 
-### Prerequisites
-
-- Node.js 20+ with npm
-- PTAH backend running on `http://localhost:8006` (or set `REACT_APP_API_BASE_URL`)
-
-### Setup
+**Prerequisites:** Node.js 20+
 
 ```bash
-cd ptah/frontend
 npm install
-npm start
+cp .env.example .env.local
+# then set GEMINI_API_KEY in .env.local
+npm run dev
 ```
 
-The frontend will start on `http://localhost:3000`
+The app runs on **http://localhost:3000** (server and frontend share one port).
 
-### Environment Variables
+Without `GEMINI_API_KEY` set, all three AI endpoints return a clearly-labeled
+demo-mode response instead of failing — useful for UI work without a key.
 
-Create a `.env.local` file:
+## API Routes (server.ts)
 
-```
-REACT_APP_API_BASE_URL=http://localhost:8006
-```
+- `POST /api/chat` — PTAH AI Co-Engineer chat, takes `{ prompt, history }`
+- `POST /api/compliance` — safety/hazard audit, takes `{ scenario, systemModule }`,
+  returns a scored JSON report (`score`, `severity`, `violations`, `corrections`)
+- `POST /api/budget-optimize` — materials budget optimizer, takes `{ items }`,
+  returns `{ optimizedItems, commentary }`
 
-## API Integration
-
-The frontend connects to PTAH backend endpoints:
-
-- `/api/health` - Health check endpoint
-- `/api/v1/ptah/wisdom/retrieve` - Retrieve infrastructure wisdom
-- `/api/v1/ptah/knowledge/integrate` - Integrate new knowledge
-- `/api/v1/ptah/status` - Get system status
-
-## Docker Deployment
-
-### Build
+## Build & Run (production)
 
 ```bash
-docker build -t ptah-frontend:latest .
+npm run build   # vite build + esbuild-bundles server.ts to dist/server.cjs
+npm start        # node dist/server.cjs
 ```
-
-### Run
-
-```bash
-docker run -p 3006:3000 \
-  -e REACT_APP_API_BASE_URL=http://ptah-backend:8006 \
-  ptah-frontend:latest
-```
-
-### Docker Compose
-
-From repository root:
-
-```bash
-docker compose -f docker-compose.frontends.yml up ptah
-```
-
-PTAH frontend will be available at `http://localhost:3006`
-
-## Technology Stack
-
-- **React** 18.3 - UI framework
-- **Tailwind CSS** - Styling
-- **Lucide Icons** - Icon library
-- **Axios** - HTTP client
-- **React Router** - Navigation
-- **Recharts** - Data visualization
 
 ## Project Structure
 
 ```
-ptah/frontend/
-├── public/
-│   └── index.html
+ptah/
+├── server.ts              # Express app: API routes + Vite/static serving
 ├── src/
+│   ├── App.tsx             # Landing <-> Console view switch
 │   ├── components/
-│   │   └── infrastructure/
-│   │       └── index.js
-│   ├── config/
-│   │   └── apiConfig.js
-│   ├── pages/
-│   │   └── Dashboard.js
-│   ├── App.js
-│   ├── App.css
-│   ├── index.js
-│   ├── index.css
-│   ├── reportWebVitals.js
-│   └── integration.test.js
-├── Dockerfile
-├── package.json
-├── postcss.config.js
-├── tailwind.config.js
-└── .gitignore
+│   │   ├── LandingPage.tsx # Marketing/overview page
+│   │   ├── ConsolePage.tsx # Main app: dashboard, chat, compliance, budget, subsystems
+│   │   └── AnimatedEmoticon.tsx
+│   ├── types.ts
+│   └── index.css
+├── public/logo.svg
+└── vite.config.ts
 ```
 
-## Testing
+## Known Issues
 
-```bash
-npm test
-```
-
-## Build for Production
-
-```bash
-npm run build
-```
-
-## Troubleshooting
-
-### API Connection Issues
-
-- Ensure PTAH backend is running on the correct port
-- Check `REACT_APP_API_BASE_URL` environment variable
-- Use browser DevTools to inspect network requests
-
-### Port Conflicts
-
-If port 3000 is already in use:
-
-```bash
-npm start -- --port 3001
-```
-
-## Support
-
-For issues or questions about the PTAH system, refer to the main constellation documentation.
+- Several Tailwind color classes used in `LandingPage.tsx`/`ConsolePage.tsx`
+  reference non-existent shades (e.g. `slate-450`, `slate-505`, `slate-705`,
+  `slate-805`, `slate-905`, `slate-940`, `slate-955`, `red-450`, `red-650`,
+  `amber-955`, `emerald-550`). Tailwind only ships 50/100/.../900/950 — these
+  silently apply no color. Needs a pass to replace with real shades.
