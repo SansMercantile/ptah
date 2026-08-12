@@ -301,11 +301,11 @@ export default function ConsolePage({ onBackToLanding }: ConsoleProps) {
       // Hard fallback if backend call fails
       setComplianceAuditResult({
         scenario: complianceScenario,
-        report: "### Error generating compliance analysis. Please configure process.env.GEMINI_API_KEY in the environment.\n\n*Emergency Fallback Guideline:* Ensure proper structural shielding on excavations and verify active crane lift weights.",
+        report: "### Error generating compliance analysis. The backend request failed -- check server connectivity and AWS credentials.\n\n*Emergency Fallback Guideline:* Ensure proper structural shielding on excavations and verify active crane lift weights.",
         score: 41,
         severity: "Critical",
         violations: ["API Connect Failure", "Harness check unreachable"],
-        corrections: ["Configure actual SECRETS mapping inside AI Studio toolbar."],
+        corrections: ["Verify the server can reach AWS Bedrock (credentials, network, region)."],
         systemModule: complianceTarget,
         createdAt: new Date().toISOString()
       });

@@ -110,3 +110,35 @@ export async function generateText(
   }
   throw lastError;
 }
+
+/**
+ * Generates a response and parses it as JSON matching shape T. The model is
+ * instructed to return ONLY JSON (no commentary, no markdown fences); the
+ * response is still defensively stripped of fences and parsed, since not
+ * every model in the fallback chain obeys that instruction with equal
+ * discipline. Throws with the raw (truncated) text on parse failure so the
+ * caller's catch block can log something actionable instead of a bare
+ * "Unexpected token" error.
+ */
+export async function generateJSON<T = any>(
+  prompt: string,
+  jsonShapeDescription: string,
+  options: GenerateOptions = {}
+): Promise<{ data: T; model: string }> {
+  const fullPrompt = `${prompt}\n\nRespond with ONLY valid JSON matching this exact shape, no markdown code fences, no commentary before or after:\n${jsonShapeDescription}`;
+  const { text, model } = await generateText(fullPrompt, options);
+
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+
+  try {
+    return { data: JSON.parse(cleaned) as T, model };
+  } catch (e) {
+    throw new Error(
+      `[bedrockClient] Failed to parse JSON from model ${model}: ${(e as Error).message}. Raw (first 300 chars): ${cleaned.slice(0, 300)}`
+    );
+  }
+}
