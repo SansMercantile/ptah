@@ -22,6 +22,15 @@ import {
   ConverseCommand,
   type Message,
 } from "@aws-sdk/client-bedrock-runtime";
+import dotenv from "dotenv";
+
+// Load .env.local here, not in server.ts -- ES module imports are hoisted
+// and fully evaluated before any of server.ts's own top-level code runs,
+// so a dotenv.config() call in server.ts (even placed textually above this
+// import) would still execute AFTER this module's top-level code has
+// already read process.env.AWS_REGION. Loading it here guarantees correct
+// ordering regardless of import order in whatever file imports this one.
+dotenv.config({ path: ".env.local" });
 
 const REGION = process.env.AWS_REGION || "us-east-1";
 
